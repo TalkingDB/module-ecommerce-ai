@@ -1,0 +1,19 @@
+{
+  "caster_concepts": {
+    "namespace": "caster_concepts",
+    "store_api_url": "https://casterconcepts.com/wp-json/wc/v3",
+    "unit_config": {
+      "capacity": "lbs",
+      "weight_capacity": "lbs",
+      "wheel_width": "in",
+      "caster_width": "in",
+      "tread_width": "mm",
+      "wheel_diameter": "in",
+      "overall_height": "in",
+      "swivel_lead": "in",
+      "swivel_radius": "in",
+      "mounting_plate_size": "in",
+      "bolt_size": "in"
+    }
+  }
+}
