@@ -1,4 +1,4 @@
-flowchart LR
+flowchart TB
     accTitle: Where module-ecommerce-ai fits
     accDescr: A shopper query reaches module-ecommerce-ai. It asks parse-tree to understand the query and to filter the knowledge graph. If that finds nothing it searches document-search. Catalogue sync reads the store's WooCommerce API and writes to parse-tree and document-search; crawl uses search-trainer.
     SH["Shopper query"] --> EAI["module-ecommerce-ai<br>:8096"]:::here

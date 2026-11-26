@@ -5,6 +5,11 @@ Natural language product search for online stores. It syncs a store's catalogue 
 ![Python 3.12 or 3.13](https://img.shields.io/badge/python-3.12%20%7C%203.13-3776AB)
 ![Port 8096](https://img.shields.io/badge/port-8096-555)
 
+<p align="center">
+  <img src="docs/images/demo.gif" alt="A short animated tour of module-ecommerce-ai: what it is, how to start, and which page to read next">
+</p>
+<p align="center"><sub>A short tour: what it is, how to start, and what to read next.</sub></p>
+
 | Start here | Go deeper |
 | :--- | :--- |
 | [Two path search](#two-path-search) | [Architecture: sync and search in detail](docs/architecture.md) |
@@ -85,6 +90,12 @@ Adding a tenant is a new JSON entry plus those two variables. Point at a differe
 - [WooCommerce REST API](https://woocommerce.github.io/woocommerce-rest-api-docs/)
 - [Ontology (information science)](https://en.wikipedia.org/wiki/Ontology_(information_science))
 - [Hybrid search explained (Weaviate blog)](https://weaviate.io/blog/hybrid-search-explained)
+
+## Support TalkingDB
+
+If module-ecommerce-ai saved you time, please [give it a star](https://github.com/TalkingDB/module-ecommerce-ai) ⭐. Stars help other developers find the project.
+
+Found a bug, or a document it gets wrong? [Open an issue](https://github.com/TalkingDB/module-ecommerce-ai/issues/new). We are always here to help and open to a conversation. Explore the TalkingDB applications at [talkingdb.io](https://talkingdb.io/#applications).
 
 ## License
 
