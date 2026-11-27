@@ -6,9 +6,9 @@ Natural language product search for online stores. It syncs a store's catalogue 
 ![Port 8096](https://img.shields.io/badge/port-8096-555)
 
 <p align="center">
-  <img src="docs/images/demo.gif" alt="A short animated tour of module-ecommerce-ai: what it is, how to start, and which page to read next">
+  <img src="docs/images/demo.gif" alt="Animated demo of a real run: 'swivel casters' resolves to a category and filters the knowledge graph; 'heavy duty wheel' resolves nothing and falls back to vector plus keyword search">
 </p>
-<p align="center"><sub>A short tour: what it is, how to start, and what to read next.</sub></p>
+<p align="center"><sub>A real run of the search orchestrator at <code>e4c037b</code> with stubbed stores, on the two cases in <code>tests/unit/services/search/test_orchestrator.py</code>.</sub></p>
 
 | Start here | Go deeper |
 | :--- | :--- |
