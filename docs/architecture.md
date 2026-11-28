@@ -45,7 +45,7 @@ Each becomes its own ontology type, every distinct value becomes a node, and eac
 
 ## Search
 
-`POST /api/tenants/{tenant_id}/search` runs the two path search drawn in the [README](../README.md#two-path-search):
+`POST /api/tenants/{tenant_id}/search` runs the two path search drawn in the [README](reference.md#two-path-search):
 
 1. `PTClient.extract_relations(namespace, query)` parses the query.
 2. Each resolved category becomes a filter `instance_of = <category id>`.
@@ -63,7 +63,12 @@ Each becomes its own ontology type, every distinct value becomes a node, and eac
 from talkingdb_eai.services.units import apply_units
 
 apply_units(
-    {"capacity": "250", "wheel_diameter": "4.5 inches", "color": "red", "tread": "soft"},
+    {
+        "capacity": "250",
+        "wheel_diameter": "4.5 inches",
+        "color": "red",
+        "tread": "soft",
+    },
     {"capacity": "lbs", "wheel_diameter": "in", "tread": "mm"},
 )
 # {'capacity': '250 lbs', 'wheel_diameter': '4.5 in', 'color': 'red', 'tread': 'soft'}

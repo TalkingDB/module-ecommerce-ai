@@ -1,95 +1,49 @@
-# module-ecommerce-ai
+<!-- short-readme -->
+<h1 align="center">module-ecommerce-ai</h1>
 
-Natural language product search for online stores. It syncs a store's catalogue into a TalkingDB ontology and a search index, then answers shopper queries such as "swivel casters for 250 lbs" by filtering the [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph) when it understands the query, and falling back to text search when it does not.
+<p align="center"><b>Natural language product search for online stores.</b></p>
 
-![Python 3.12 or 3.13](https://img.shields.io/badge/python-3.12%20%7C%203.13-3776AB)
-![Port 8096](https://img.shields.io/badge/port-8096-555)
+<p align="center"><a href="#try-it">Try it</a> · <a href="docs/architecture.md">How it works</a> · <a href="docs/usage-and-examples.md">Usage and examples</a> · <a href="docs/troubleshooting.md">Troubleshooting</a> · <a href="docs/reference.md">Full reference</a></p>
+
+<p align="center"><a href="https://github.com/TalkingDB/module-ecommerce-ai/stargazers"><img src="https://img.shields.io/github/stars/TalkingDB/module-ecommerce-ai?style=social" alt="GitHub stars"></a></p>
 
 <p align="center">
   <img src="docs/images/demo.gif" alt="Animated demo of a real run: 'swivel casters' resolves to a category and filters the knowledge graph; 'heavy duty wheel' resolves nothing and falls back to vector plus keyword search">
 </p>
 <p align="center"><sub>A real run of the search orchestrator at <code>e4c037b</code> with stubbed stores, on the two cases in <code>tests/unit/services/search/test_orchestrator.py</code>.</sub></p>
 
-| Start here | Go deeper |
-| :--- | :--- |
-| [Two path search](#two-path-search) | [Architecture: sync and search in detail](docs/architecture.md) |
-| [Where this fits](#where-this-fits) | [Usage and examples: tenants, sync, crawl, search](docs/usage-and-examples.md) |
-| [Quickstart](#quickstart) | [Troubleshooting](docs/troubleshooting.md) |
-| [What this repo is not](#what-this-repo-is-not) | [Tenants](#tenants) |
+It syncs a store's catalogue into a TalkingDB ontology and a search index. When it understands a query it filters the [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph) by category; when it does not, it falls back to text search.
 
-All pages: [docs/](docs/README.md).
+## What it does
 
-This module composes [package-parse-tree](https://github.com/TalkingDB/package-parse-tree) (ontology), [package-search-trainer](https://github.com/TalkingDB/package-search-trainer) (web crawling) and [package-document-search](https://github.com/TalkingDB/package-document-search) (vector and keyword search) through their client interfaces. It serves any store operator; nothing in the code is specific to one store.
+- **Sync** a catalogue from WooCommerce into products and an ontology ([what sync does](docs/architecture.md)).
+- **Understand** the query with [package-parse-tree](https://github.com/TalkingDB/package-parse-tree), then filter by category.
+- **Fall back** to vector plus keyword search in [package-document-search](https://github.com/TalkingDB/package-document-search), with the store's units applied ([examples](docs/usage-and-examples.md)).
 
-## Where this fits
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/where-module-ecommerce-ai-fits-dark.svg">
-  <img alt="A shopper query reaches module-ecommerce-ai. It asks parse-tree to understand the query and to filter the knowledge graph. If that finds nothing it searches document-search. Catalogue sync reads the store's WooCommerce API and writes to parse-tree and document-search; crawl uses search-trainer." src="docs/images/where-module-ecommerce-ai-fits.svg">
-</picture>
-
-<sub>Diagram source: [where-module-ecommerce-ai-fits.mmd](docs/diagrams/where-module-ecommerce-ai-fits.mmd). Edit it and re-render with the steps in [docs/diagrams](docs/diagrams/README.md).</sub>
-
-In words: this module owns the shop specific parts (catalogue connector, product ontology, units) and delegates understanding to parse-tree and recall to document search.
-
-## Two path search
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/two-path-search-dark.svg">
-  <img alt="The query is parsed by parse-tree. If it resolves to a known category, the knowledge graph is filtered by that category. If that returns results they are used. Otherwise, or if no category resolved, vector and keyword search runs over product titles and text. Either way, the tenant's units are applied before returning." src="docs/images/two-path-search.svg">
-</picture>
-
-<sub>Diagram source: [two-path-search.mmd](docs/diagrams/two-path-search.mmd). Edit it and re-render with the steps in [docs/diagrams](docs/diagrams/README.md).</sub>
-
-In words: if the query names a category the ontology knows, the answer comes from the knowledge graph and can be explained; otherwise text search catches it. Exact, product type, feature and compatibility queries tend to take the first path; thematic, slang and symptom queries tend to take the second.
-
-> [!NOTE]
-> Today only the category narrows the graph filter. A resolved attribute value such as "red" or "swivel" does not, because parse-tree's filter follows a fixed allowlist of edges. Extending that filter is the follow up.
-
-## Quickstart
-
-You need Python 3.12 or 3.13, [Poetry](https://python-poetry.org/docs/#installation), the `base-tdb-*` and `package-*` repositories it pins checked out next to this one, a running [package-named-entity-linker](https://github.com/TalkingDB/package-named-entity-linker), Milvus or Milvus Lite, and an `OPENAI_API_KEY` for [embeddings](https://en.wikipedia.org/wiki/Word_embedding).
+## Try it
 
 ```bash
-make sync MODE=git      # or MODE=local for editable base-tdb-*/package-* checkouts
+make sync MODE=git
 poetry install
 make test
 make local              # API on http://localhost:8096, Swagger at /docs
 ```
 
-## Tenants
+Needs a running [package-named-entity-linker](https://github.com/TalkingDB/package-named-entity-linker), Milvus or Milvus Lite, and an `OPENAI_API_KEY`.
 
-A **tenant** is one store. [`tenants.json`](tenants.json) holds each tenant's non secret settings: its namespace, store API URL and unit of measure per attribute. Store credentials come from two environment variables per tenant, read at call time and never stored in the file:
+## Where it fits
 
-```text
-<TENANT_ID in upper case>_STORE_API_UN
-<TENANT_ID in upper case>_STORE_API_PWD
-```
+The shop-specific layer over [package-parse-tree](https://github.com/TalkingDB/package-parse-tree) and [package-document-search](https://github.com/TalkingDB/package-document-search).
 
-Adding a tenant is a new JSON entry plus those two variables. Point at a different file with `EAI_TENANTS_CONFIG_PATH`. Full example in [docs/usage-and-examples.md](docs/usage-and-examples.md#add-a-tenant).
+## Learn more
 
-## What this repo is not
-
-- **Not a store platform.** It reads a catalogue through the WooCommerce [REST API](https://developer.mozilla.org/en-US/docs/Glossary/REST); it does not sell, price or stock anything.
-- **Not a general web search.** It searches one tenant's catalogue and any pages you crawl into that tenant.
-- **Not an ontology editor.** It writes a fixed product ontology shape (categories, attribute classes, attribute values, products) into parse-tree.
-- **Not self training for NEL.** `/sync` writes ontology data but does not train the Named Entity Linker; see [troubleshooting](docs/troubleshooting.md).
-
-## Related repositories
-
-| Repository | Relationship |
+| Page | Read it to |
 | :--- | :--- |
-| [package-parse-tree](https://github.com/TalkingDB/package-parse-tree) | Understands the query and filters the knowledge graph |
-| [package-document-search](https://github.com/TalkingDB/package-document-search) | Fallback vector and keyword search |
-| [package-search-trainer](https://github.com/TalkingDB/package-search-trainer) | Crawls buying guides and other pages into the tenant's index |
-| [package-named-entity-linker](https://github.com/TalkingDB/package-named-entity-linker) | Called by parse-tree to find known words in the query |
-| [talkingdb-benchmarks](https://github.com/TalkingDB/talkingdb-benchmarks) | Public retrieval benchmarks, including an ecommerce support case |
-
-## Further reading
-
-- [WooCommerce REST API](https://woocommerce.github.io/woocommerce-rest-api-docs/)
-- [Ontology (information science)](https://en.wikipedia.org/wiki/Ontology_(information_science))
-- [Hybrid search explained (Weaviate blog)](https://weaviate.io/blog/hybrid-search-explained)
+| [How it works](docs/architecture.md) | see the parts and how data moves |
+| [Usage and examples](docs/usage-and-examples.md) | copy working examples |
+| [Troubleshooting](docs/troubleshooting.md) | fix a problem |
+| [Full reference](docs/reference.md) | read everything that used to be on this page |
+| [All docs](docs/README.md) | see every page |
 
 ## Support TalkingDB
 
