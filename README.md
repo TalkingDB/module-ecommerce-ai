@@ -1,88 +1,57 @@
-# module-ecommerce-ai
+<!-- short-readme -->
+<h1 align="center">module-ecommerce-ai</h1>
 
-Ecommerce search product: syncs a tenant's store catalog into an ontology
-and search index, then serves natural-language product search over it.
-Composes `package-parse-tree` (ontology), `package-search-trainer`
-(generic web-content crawling), and `package-document-search`
-(vector/keyword search) via their client-mode interfaces.
+<p align="center"><b>Natural language product search for online stores.</b></p>
 
-This module **is** Kray, reborn as a TalkingDB module and genericized to
-serve any ecommerce store operator rather than hardcoded to one client.
-"Kray" is retired from all client-facing surfaces here; Caster Concepts
-is simply the first configured tenant.
+<p align="center"><a href="#try-it">Try it</a> · <a href="docs/architecture.md">How it works</a> · <a href="docs/usage-and-examples.md">Usage and examples</a> · <a href="docs/troubleshooting.md">Troubleshooting</a> · <a href="docs/reference.md">Full reference</a></p>
 
-## What it owns
+<p align="center"><a href="https://github.com/TalkingDB/module-ecommerce-ai/stargazers"><img src="https://img.shields.io/github/stars/TalkingDB/module-ecommerce-ai?style=social" alt="GitHub stars"></a></p>
 
-Everything that's actually ecommerce-domain vocabulary, deliberately kept
-out of the generic `package-*` repos:
+<p align="center">
+  <img src="docs/images/demo.gif" alt="Animated demo of a real run: 'swivel casters' resolves to a category and filters the knowledge graph; 'heavy duty wheel' resolves nothing and falls back to vector plus keyword search">
+</p>
+<p align="center"><sub>A real run of the search orchestrator at <code>e4c037b</code> with stubbed stores, on the two cases in <code>tests/unit/services/search/test_orchestrator.py</code>.</sub></p>
 
-- **The ecommerce ontology definition** - Category/Attribute/Product types
-  mapped onto `package-parse-tree`'s generic type/instance/attribute
-  schema (`talkingdb_eai/services/ontology/`).
-- **The WooCommerce connector** (`talkingdb_eai/services/connectors/woocommerce.py`)
-  - a generic, config-driven REST client (auth and store URL are
-  per-tenant config, not hardcoded).
-- **Per-tenant configuration** (`tenants.json`) - a tenant is a JSON entry
-  plus two env vars for its store credentials. No tenant name appears in
-  any file path, class, or module.
+It syncs a store's catalogue into a TalkingDB ontology and a search index. When it understands a query it filters the [knowledge graph](https://en.wikipedia.org/wiki/Knowledge_graph) by category; when it does not, it falls back to text search.
 
-## Tenants
+## What it does
 
-`tenants.json` at the repo root holds every configured tenant's
-non-secret config (namespace, store API URL, per-tenant unit-of-measure
-tagging). Store API credentials are read from env vars named
-`<TENANT_ID upper>_STORE_API_UN` / `_PWD` at call time - never stored in
-`tenants.json`. Adding a new tenant (including a fake one, for testing
-that this module carries no tenant-specific code) is purely a matter of
-a new JSON entry plus its two env vars.
+- **Sync** a catalogue from WooCommerce into products and an ontology ([what sync does](docs/architecture.md)).
+- **Understand** the query with [package-parse-tree](https://github.com/TalkingDB/package-parse-tree), then filter by category.
+- **Fall back** to vector plus keyword search in [package-document-search](https://github.com/TalkingDB/package-document-search), with the store's units applied ([examples](docs/usage-and-examples.md)).
 
-## Two-path search
+## Try it
 
-Given a query, `services/search/orchestrator.py` calls
-`PTClient.extract_relations` to see if the query resolves to a
-recognized ontology category:
-
-- **Resolved** -> filter the knowledge graph directly via
-  `PTClient.query_kg_data` (precise).
-- **Not resolved, or the KG path returns nothing** -> fall back to
-  `DSClient.search`'s vector+keyword search over indexed product text
-  (recall).
-
-Either path's results get the tenant's unit config applied
-(`services/units.py`) before returning. This mirrors the legacy system's
-"7 named search types" at a structural level - see the module's Jira
-history for how those names map onto this two-path design - without
-hardcoding 7 branches: exact/product-type/feature/compatibility queries
-naturally resolve via the KG path, thematic/slang/symptom queries fall
-through to the vector path.
-
-Known limitation: `package-parse-tree`'s structured filter engine only
-recognizes a fixed edge allowlist (`instance_of`, `subclass_of`,
-`has_attributes`, `has_units`, `default_unit`), so a resolved category
-narrows the KG-path filter but a resolved attribute value (e.g. "red",
-"swivel") doesn't yet. Follow-up: extend that filter engine to support
-attribute-edge filtering.
-
-## Ingestion
-
-`POST /api/tenants/{tenant_id}/sync` pulls the tenant's WooCommerce
-catalog, registers ontology types, writes categories/attributes/products
-into `package-parse-tree`, and indexes product text into
-`package-document-search` for vector/keyword search
-(`services/ingest/orchestrator.py`). The target document-search
-namespace/index must already exist - this only trains data into it.
-
-`POST /api/tenants/{tenant_id}/crawl` uses `STClient.crawl_and_train` to
-crawl supplementary web content (e.g. buying guides, blog posts) into the
-same namespace, for content a store's REST API doesn't expose.
-
-## Development
-
-```
-make sync MODE=git      # or MODE=local for editable base-tdb-*/package-* checkouts
+```bash
+make sync MODE=git
 poetry install
 make test
-make local               # run with hot reload
+make local              # API on http://localhost:8096, Swagger at /docs
 ```
 
-See `Makefile` for the full list of targets.
+Needs a running [package-named-entity-linker](https://github.com/TalkingDB/package-named-entity-linker), Milvus or Milvus Lite, and an `OPENAI_API_KEY`.
+
+## Where it fits
+
+The shop-specific layer over [package-parse-tree](https://github.com/TalkingDB/package-parse-tree) and [package-document-search](https://github.com/TalkingDB/package-document-search).
+
+## Learn more
+
+| Page | Read it to |
+| :--- | :--- |
+| [How it works](docs/architecture.md) | see the parts and how data moves |
+| [Usage and examples](docs/usage-and-examples.md) | copy working examples |
+| [Troubleshooting](docs/troubleshooting.md) | fix a problem |
+| [Full reference](docs/reference.md) | read everything that used to be on this page |
+| [All docs](docs/README.md) | see every page |
+
+## Support TalkingDB
+
+If module-ecommerce-ai saved you time, please [give it a star](https://github.com/TalkingDB/module-ecommerce-ai) ⭐. Stars help other developers find the project.
+
+Found a bug, or a document it gets wrong? [Open an issue](https://github.com/TalkingDB/module-ecommerce-ai/issues/new). We are always here to help and open to a conversation. Explore the TalkingDB applications at [talkingdb.io](https://talkingdb.io/#applications).
+
+## License
+
+> [!NOTE]
+> This repository does not have a LICENSE file yet. Most TalkingDB repositories are licensed under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html); until a LICENSE file is added here, no license is granted by this README.

@@ -1,0 +1,12 @@
+flowchart TB
+    accTitle: Two path search
+    accDescr: The query is parsed by parse-tree. If it resolves to a known category, the knowledge graph is filtered by that category. If that returns results they are used. Otherwise, or if no category resolved, vector and keyword search runs over product titles and text. Either way, the tenant's units are applied before returning.
+    Q["query"] --> X["PTClient.extract_relations"]
+    X --> C{"resolves to a<br>known category?"}
+    C -- yes --> KG["filter knowledge graph<br>instance_of = category"]
+    KG --> R{"any results?"}
+    R -- yes --> U["apply tenant units"]
+    R -- no --> V["DSClient.search<br>vector + keyword (title)"]
+    C -- no --> V
+    V --> U
+    U --> OUT["results"]

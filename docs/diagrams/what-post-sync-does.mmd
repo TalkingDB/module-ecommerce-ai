@@ -1,0 +1,16 @@
+sequenceDiagram
+    accTitle: What POST /sync does
+    accDescr: The module reads categories and products from the store's WooCommerce API with the tenant's credentials. It registers four kinds of ontology types in parse-tree, then writes category nodes, attribute class nodes, attribute value nodes and product nodes. Finally it trains product text into document search as vectors and as keyword documents, and returns counts.
+    autonumber
+    participant API as POST /api/tenants/{id}/sync
+    participant WC as WooCommerce REST API
+    participant PT as package-parse-tree
+    participant DS as package-document-search
+    API->>WC: fetch categories and products (tenant credentials)
+    API->>PT: register types: category, attribute, each object attribute, product
+    API->>PT: upsert category nodes
+    API->>PT: upsert attribute class nodes and attribute value nodes
+    API->>PT: upsert product nodes (units applied)
+    API->>DS: train_vectors([ids, "name description"])
+    API->>DS: train_keywords(id, title, description)
+    API-->>API: categories_indexed, attributes_indexed, products_indexed
